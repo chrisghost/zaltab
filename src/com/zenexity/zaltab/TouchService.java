@@ -64,23 +64,22 @@ public class TouchService extends Service implements OnTouchListener {
 	 
 	 private void createAppBox() {
 		LinearLayout ll = new LinearLayout(this);
-		appBoxes.add(ll);
 
 		LayoutParams lp = new LayoutParams(100, 100);
 		ll.setLayoutParams(lp);
 		ll.setBackgroundColor(Color.RED);
 
-		// fetch window manager object
-		mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 		// set layout parameter of window manager
 		WindowManager.LayoutParams mParams =
-				new WindowManager.LayoutParams(100, 100,
-				WindowManager.LayoutParams.TYPE_PHONE,
-				WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-				PixelFormat.TRANSLUCENT);
+				new WindowManager.LayoutParams(
+						100, 100,
+						WindowManager.LayoutParams.TYPE_PHONE,
+						WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+						PixelFormat.TRANSLUCENT);
 		mParams.gravity = Gravity.RIGHT | Gravity.CENTER;
 
 		mWindowManager.addView(ll, mParams);
+		appBoxes.add(ll);
 	 }
 
 	 public void cleanBoxes() {
@@ -88,6 +87,7 @@ public class TouchService extends Service implements OnTouchListener {
 			 for(int i=0; i< appBoxes.size(); i++) {
 				 mWindowManager.removeView(appBoxes.get(i));
 			 }
+			 appBoxes.clear();
 		 }
 	 }
 	 
@@ -110,7 +110,6 @@ public class TouchService extends Service implements OnTouchListener {
 						Math.pow(Math.abs(x-startX), 2)
 					+ 	Math.pow(Math.abs(y-startY), 2));
 
-			Log.i(TAG, "Moving.... distance is now:"+distance);
 			if(distance > 300) {
 				touchLayout.setBackgroundColor(Color.GREEN);
 				createAppBox();
