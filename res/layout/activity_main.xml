@@ -24,14 +24,4 @@
         android:onClick="buttonClicked"
         android:text="@string/startservice" />
 
-    <ImageView
-        android:id="@+id/imageView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/button1"
-        android:layout_marginLeft="50dp"
-        android:layout_marginTop="159dp"
-        android:layout_toRightOf="@+id/textView1"
-        android:src="@drawable/ic_launcher" />
-
 </RelativeLayout>

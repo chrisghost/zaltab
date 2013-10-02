@@ -1,55 +1,35 @@
 package com.zenexity.zaltab;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.os.Bundle;
 import android.app.Activity;
-import android.app.ActivityManager;
-import android.app.ActivityManager.RecentTaskInfo;
-import android.app.ActivityManager.RunningAppProcessInfo;
-import android.app.ActivityManager.RunningTaskInfo;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.graphics.drawable.Drawable;
 import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
-	 Intent globalService;
-	 @Override
-	 public void onCreate(Bundle savedInstanceState) {
-	  super.onCreate(savedInstanceState);
-	  setContentView(R.layout.activity_main);
-	  globalService = new Intent(this, TouchService.class);
-	  
-	 }
+	Intent globalService;
 
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		globalService = new Intent(this, TouchService.class);
 
-	 public void buttonClicked(View v){
+	}
 
-		 final ImageView imgV1 = (ImageView)findViewById(R.id.imageView1);
+	public void buttonClicked(View v) {
 
-		 ActivityManager manager = 
-			    (ActivityManager) this.getSystemService(ACTIVITY_SERVICE);
+		if (v.getTag() == null) {
+			startService(globalService);
+			v.setTag("on");
+			Toast.makeText(this, "Start Service", Toast.LENGTH_SHORT).show();
+		} else {
+			stopService(globalService);
+			v.setTag(null);
+			Toast.makeText(this, "Stop Service", Toast.LENGTH_SHORT).show();
+		}
 
-	  if(v.getTag() == null){
-	   startService(globalService);
-	   v.setTag("on");
-	   Toast.makeText(this, "Start Service", Toast.LENGTH_SHORT).show();
-	  }
-	  else{
-	   stopService(globalService);
-	   v.setTag(null);
-	   Toast.makeText(this, "Stop Service", Toast.LENGTH_SHORT).show();
-	  }
-	  
-	 }
-
+	}
 
 }
