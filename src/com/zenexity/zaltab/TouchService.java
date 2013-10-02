@@ -11,6 +11,9 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.LightingColorFilter;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
 import android.view.Gravity;
@@ -138,6 +141,11 @@ public class TouchService extends Service implements OnTouchListener {
 				imgV.setImageDrawable(pm.getApplicationIcon(appInfo));
 			} catch (NullPointerException npe) {
 				imgV.setImageResource(R.drawable.no_icon_app);
+			}
+			
+			if(i != 0) {
+				ColorFilter filter = new LightingColorFilter(Color.GRAY, 1);
+				imgV.setColorFilter(filter);
 			}
 	
 			ll.addView(imgV);
