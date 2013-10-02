@@ -98,7 +98,7 @@ public class TouchService extends Service implements OnTouchListener {
 	}
 
 	private void getLastAppInfo() {
-		List<RunningTaskInfo> list = manager.getRunningTasks(5);
+		List<RunningTaskInfo> list = manager.getRunningTasks(10);
 		List<RunningTaskInfo> listFiltered = new ArrayList<ActivityManager.RunningTaskInfo>();
 		// Pour avoir les ident r.id = RecentTask.id
 		for (RunningTaskInfo r : list) {
@@ -110,7 +110,7 @@ public class TouchService extends Service implements OnTouchListener {
 			}
 		}
 
-		List<RecentTaskInfo> rtis = manager.getRecentTasks(5,
+		List<RecentTaskInfo> rtis = manager.getRecentTasks(10,
 				ActivityManager.RECENT_WITH_EXCLUDED);
 		
 		this.apps.clear();
