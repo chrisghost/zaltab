@@ -18,11 +18,10 @@
         android:id="@+id/button1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
         android:layout_below="@+id/textView1"
-        android:layout_marginRight="20dp"
-        android:layout_marginTop="70dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="52dp"
         android:onClick="buttonClicked"
-        android:text="Start Touch Detection" />
+        android:text="@string/startservice" />
 
 </RelativeLayout>
