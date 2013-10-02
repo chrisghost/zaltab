@@ -41,8 +41,8 @@ public class TouchService extends Service implements OnTouchListener {
 
 	private PackageManager pm;
 
-	private ApplicationInfo lastAppInfo;
-	private RecentTaskInfo lastTaskInfo;
+	private List<ApplicationInfo> lastAppInfo = new ArrayList<ApplicationInfo>();
+	private List<RecentTaskInfo> lastTaskInfo = new ArrayList<RecentTaskInfo>();
 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -58,14 +58,14 @@ public class TouchService extends Service implements OnTouchListener {
 		pm = getPackageManager();
 
 		touchLayout = new LinearLayout(this);
-		LayoutParams lp = new LayoutParams(30, LayoutParams.MATCH_PARENT);
+		LayoutParams lp = new LayoutParams(10, LayoutParams.MATCH_PARENT);
 		touchLayout.setLayoutParams(lp);
 
 		touchLayout.setOnTouchListener(this);
 
 		mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
-		WindowManager.LayoutParams mParams = new WindowManager.LayoutParams(30,
+		WindowManager.LayoutParams mParams = new WindowManager.LayoutParams(10,
 				WindowManager.LayoutParams.MATCH_PARENT,
 				WindowManager.LayoutParams.TYPE_PHONE,
 				WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
