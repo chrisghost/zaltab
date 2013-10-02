@@ -1,5 +1,6 @@
 package com.zenexity.zaltab;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import android.os.Bundle;
@@ -9,6 +10,10 @@ import android.app.ActivityManager.RecentTaskInfo;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.ActivityManager.RunningTaskInfo;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -27,23 +32,42 @@ public class MainActivity extends Activity {
 
 
 	 public void buttonClicked(View v){
-	  final TextView vTextView2 = (TextView)findViewById(R.id.textView2);
-	  final TextView vTextView1 = (TextView)findViewById(R.id.textView1);
-	  final ImageView imgV = (ImageView)findViewById(R.id.imageView1);
-	  ActivityManager manager = 
+
+		 final ImageView imgV1 = (ImageView)findViewById(R.id.imageView1);
+
+		 ActivityManager manager = 
 			    (ActivityManager) this.getSystemService(ACTIVITY_SERVICE);
-			List<RunningTaskInfo> rtinfo = manager.getRunningTasks(1);
-			List<RecentTaskInfo> rtis = manager.getRecentTasks(5,ActivityManager.RECENT_WITH_EXCLUDED);
-			List<RunningTaskInfo> taskInfos = null;
-			//GET recent Application
-			//for (RecentTaskInfo rti : rtis)
-			//{
-				//vTextView2.setText(vTextView2.getText() + "\n" + rti.id );
-	 		//}
-			for (RunningTaskInfo rt : rtinfo) {
-				imgV.setImageBitmap(rt.thumbnail);
+
+		 PackageManager pm = getPackageManager();
+
+		 List<RunningTaskInfo> list = manager.getRunningTasks(10);
+		 List<RunningTaskInfo> listFiltered = new ArrayList<ActivityManager.RunningTaskInfo>();
+		 // Pour avoir les ident r.id = RecentTask.id
+		 for(RunningTaskInfo r : list) {
+			 if(!"com.android.launcher".equals(r.baseActivity.getPackageName()) 
+			    && !"com.android.systemui".equals(r.baseActivity.getPackageName()) {
+				 listFiltered.add(r);
+			 }
+		 }
+		 
+	    for (int i=0; i< listFiltered.size(); i++)
+	    {
+	        ApplicationInfo appInfo;
+			try {
+				appInfo = pm.getApplicationInfo(list.get(i).baseActivity.getPackageName(), 0);
+		        String packageName = appInfo.packageName;
+		        String appLabel = (String) pm.getApplicationLabel(appInfo);
+		        Drawable icon = pm.getApplicationIcon(appInfo);
+		        System.out.println("appLabel ==> " +appLabel);
+		        System.out.println("packageName ==> " +packageName);
+		        System.out.println("Icon ==> " +icon);
+		        imgV1.setImageDrawable(icon);
+			} catch (NameNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			//}
+	    }
+	  
 	  if(v.getTag() == null){
 	   startService(globalService);
 	   v.setTag("on");

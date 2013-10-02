@@ -24,20 +24,13 @@
         android:onClick="buttonClicked"
         android:text="@string/startservice" />
 
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/textView1"
-        android:layout_alignParentRight="true" />
-
     <ImageView
         android:id="@+id/imageView1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/button1"
-        android:layout_marginLeft="42dp"
-        android:layout_marginTop="163dp"
+        android:layout_marginLeft="50dp"
+        android:layout_marginTop="159dp"
         android:layout_toRightOf="@+id/textView1"
         android:src="@drawable/ic_launcher" />
 
