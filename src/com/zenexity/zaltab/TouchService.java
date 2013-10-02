@@ -29,12 +29,10 @@ import android.widget.LinearLayout.LayoutParams;
 public class TouchService extends Service implements OnTouchListener {
 
 	private String TAG = this.getClass().getSimpleName();
-	// window manager
-	private WindowManager mWindowManager;
-	// linear layout will use to detect touch event
-	private LinearLayout touchLayout;
 
-	private List<View> appBoxes = new ArrayList<View>();
+	private WindowManager mWindowManager;
+
+	private LinearLayout touchLayout;
 
 	ActivityManager manager;
 
@@ -47,13 +45,13 @@ public class TouchService extends Service implements OnTouchListener {
 	private boolean appSelected;
 
 	private PackageManager pm;
-
-	private List<ApplicationInfo> lastAppInfo = new ArrayList<ApplicationInfo>();
-	private List<RecentTaskInfo> lastTaskInfo = new ArrayList<RecentTaskInfo>();
-
-	List<ImageView> ivLst = new ArrayList<ImageView>();
+	
+	List<AppBox> apps = new ArrayList<AppBox>();
 	
 	private static final int iconSize = 100;
+	
+	private int selectedIndex = 0;
+	private LinearLayout appsIcons;
 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -87,9 +85,9 @@ public class TouchService extends Service implements OnTouchListener {
 		mWindowManager.addView(touchLayout, mParams);
 	}
 
-	private void launchLastApp() {
-		if (lastTaskInfo.size() > 0 && lastTaskInfo.get(0) != null)
-			startActivity(lastTaskInfo.get(0).baseIntent);
+	private void launchLastApp(int idx) {
+		if (apps.size() > idx && apps.get(idx) != null)
+			startActivity(apps.get(idx).taskInfo.baseIntent);
 	}
 
 	private void getLastAppInfo() {
@@ -108,9 +106,7 @@ public class TouchService extends Service implements OnTouchListener {
 		List<RecentTaskInfo> rtis = manager.getRecentTasks(10,
 				ActivityManager.RECENT_WITH_EXCLUDED);
 		
-		this.lastAppInfo.clear();
-		this.lastTaskInfo.clear();
-
+		this.apps.clear();
 
 		for (int i = 0; i < listFiltered.size(); i++) {
 			//We must permute the first 2 entries ( the first is the current app)
@@ -122,8 +118,10 @@ public class TouchService extends Service implements OnTouchListener {
 					RecentTaskInfo rti = rtis.get(j);
 
 					try {
-						this.lastAppInfo.add(pm.getApplicationInfo(_task.baseActivity.getPackageName(), 0));
-						this.lastTaskInfo.add(rti);
+						AppBox app = new AppBox();
+						app.appInfo = pm.getApplicationInfo(_task.baseActivity.getPackageName(), 0);
+						app.taskInfo = rti;
+						apps.add(app);
 						// String packageName = appInfo.packageName;
 						// String appLabel = (String)
 						// pm.getApplicationLabel(appInfo);
@@ -137,12 +135,12 @@ public class TouchService extends Service implements OnTouchListener {
 	}
 
 	private void updateIcons(int idx) {
-		for(int i = 0; i< ivLst.size(); i++) {
+		for(int i = 0; i< apps.size(); i++) {
 			if(i == idx) {
-				ivLst.get(i).setColorFilter(null);
+				apps.get(i).imageView.setColorFilter(null);
 			} else {
 				ColorFilter filter = new LightingColorFilter(Color.GRAY, 1);
-				ivLst.get(i).setColorFilter(filter);
+				apps.get(i).imageView.setColorFilter(filter);
 			}
 		}
 	}
@@ -150,14 +148,13 @@ public class TouchService extends Service implements OnTouchListener {
 	private void createAppBox() {
 		getLastAppInfo();
 		
-		LinearLayout ll = new LinearLayout(this);
-		ll.setOrientation(LinearLayout.VERTICAL);
-		ivLst.clear();
+		appsIcons = new LinearLayout(this);
+		appsIcons.setOrientation(LinearLayout.VERTICAL);
 
 		int n = 0;
 
-		for(int i = lastAppInfo.size()-1; i >= 0; i--) {
-			ApplicationInfo appInfo = lastAppInfo.get(i);
+		for(int i = apps.size()-1; i >= 0; i--) {
+			ApplicationInfo appInfo = apps.get(i).appInfo;
 			ImageView imgV = new ImageView(this);
 			try {
 				imgV.setImageDrawable(pm.getApplicationIcon(appInfo));
@@ -170,8 +167,8 @@ public class TouchService extends Service implements OnTouchListener {
 				imgV.setColorFilter(filter);
 			}
 	
-			ll.addView(imgV);
-			ivLst.add(0, imgV);
+			appsIcons.addView(imgV);
+			apps.get(i).imageView = imgV;
 			n++;
 		}
 
@@ -182,17 +179,19 @@ public class TouchService extends Service implements OnTouchListener {
 		mParams.gravity = Gravity.RIGHT | Gravity.CENTER;
 		mParams.y = (int) (startY - 2*n*iconSize);
 
-		mWindowManager.addView(ll, mParams);
-
-		appBoxes.add(ll);
+		mWindowManager.addView(appsIcons, mParams);
 	}
 
 	public void cleanBoxes() {
 		if (mWindowManager != null) {
-			for (int i = 0; i < appBoxes.size(); i++) {
-				mWindowManager.removeView(appBoxes.get(i));
+			try {
+				mWindowManager.removeView(appsIcons);
+				for (int i = 0; i < apps.size(); i++) {
+					apps.get(i).imageView = null;
+				}
+			} catch (Exception ex) {
+				Log.e(TAG, "Cannot remove appsIcons view form WindowManager");
 			}
-			appBoxes.clear();
 		}
 	}
 
@@ -222,7 +221,7 @@ public class TouchService extends Service implements OnTouchListener {
 			} else if (appSelected) {
 				if(Math.abs(y-lastY) > iconSize) {
 					lastY = y;
-					int selectedIndex = (int)Math.floor(Math.abs(startY - y)/iconSize);
+					selectedIndex = (int)Math.floor(Math.abs(startY - y)/iconSize);
 					updateIcons(selectedIndex);
 				}
 			}
@@ -236,7 +235,7 @@ public class TouchService extends Service implements OnTouchListener {
 		}
 		if (event.getAction() == MotionEvent.ACTION_UP) {
 			if (appSelected) {
-				launchLastApp();
+				launchLastApp(this.selectedIndex);
 			}
 			cleanInterface();
 		}
