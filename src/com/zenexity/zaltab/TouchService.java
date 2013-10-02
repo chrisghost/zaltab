@@ -3,7 +3,11 @@ package com.zenexity.zaltab;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.Service;
+import android.app.ActivityManager.RecentTaskInfo;
+import android.app.ActivityManager.RunningTaskInfo;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
@@ -27,8 +31,12 @@ public class TouchService extends Service implements OnTouchListener {
 	
 	private List<LinearLayout> appBoxes = new ArrayList<LinearLayout>();
 	
+	ActivityManager manager;
+	
 	private float startX;
 	private float startY;
+	
+	private boolean appSelected;
 	 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -38,6 +46,9 @@ public class TouchService extends Service implements OnTouchListener {
 	 @Override
 	 public void onCreate() {
 	  super.onCreate();
+	  
+	  manager = (ActivityManager) this.getSystemService(ACTIVITY_SERVICE);
+	  
 	  // create linear layout
 	  touchLayout = new LinearLayout(this);
 	  // set layout width 30 px and height is equal to full screen
@@ -60,6 +71,17 @@ public class TouchService extends Service implements OnTouchListener {
 		mParams.gravity = Gravity.RIGHT | Gravity.TOP;
 		
 		mWindowManager.addView(touchLayout, mParams);
+	 }
+	 
+	 private void launchLastApp() {
+		List<RecentTaskInfo> rtis = manager.getRecentTasks(5,ActivityManager.RECENT_WITH_EXCLUDED);
+		Log.d(TAG, "apps:"+rtis.size());
+		
+		if(rtis.size() > 1) {
+			RecentTaskInfo rti = rtis.get(1);
+			Log.d(TAG, rti.toString());
+			startActivity(rti.baseIntent);
+		}
 	 }
 	 
 	 private void createAppBox() {
@@ -113,6 +135,9 @@ public class TouchService extends Service implements OnTouchListener {
 			if(distance > 300) {
 				touchLayout.setBackgroundColor(Color.GREEN);
 				createAppBox();
+				appSelected = true;
+			} else {
+				 cleanInterface();
 			}
 		 }
 		 if(event.getAction() == MotionEvent.ACTION_DOWN) {
@@ -120,10 +145,18 @@ public class TouchService extends Service implements OnTouchListener {
 			startY = event.getRawY();
 		 }
 		 if(event.getAction() == MotionEvent.ACTION_UP) {
-			 touchLayout.setBackgroundColor(Color.CYAN);
-			 cleanBoxes();
+			 if(appSelected) {
+				 launchLastApp();
+			 }
+			 cleanInterface();
 		 }
 	  return true;
+	 }
+	 
+	 private void cleanInterface() {
+		 touchLayout.setBackgroundColor(Color.CYAN);
+		 cleanBoxes();
+		 appSelected = false;
 	 }
 
 }
