@@ -54,7 +54,7 @@ public class TouchService extends Service implements OnTouchListener {
 	
 	private float scale;
 
-	private float iconSize = 0.0f;
+	private float iconSize = 100.0f;
 	
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -77,7 +77,7 @@ public class TouchService extends Service implements OnTouchListener {
 		
 		scale = getResources().getDisplayMetrics().density;
 		Log.d(TAG, "scale is : "+scale);
-		iconSize = 100*scale;
+		//iconSize = 100*scale;
 
 		mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
@@ -98,7 +98,7 @@ public class TouchService extends Service implements OnTouchListener {
 	}
 
 	private void getLastAppInfo() {
-		List<RunningTaskInfo> list = manager.getRunningTasks(10);
+		List<RunningTaskInfo> list = manager.getRunningTasks(5);
 		List<RunningTaskInfo> listFiltered = new ArrayList<ActivityManager.RunningTaskInfo>();
 		// Pour avoir les ident r.id = RecentTask.id
 		for (RunningTaskInfo r : list) {
@@ -110,7 +110,7 @@ public class TouchService extends Service implements OnTouchListener {
 			}
 		}
 
-		List<RecentTaskInfo> rtis = manager.getRecentTasks(10,
+		List<RecentTaskInfo> rtis = manager.getRecentTasks(5,
 				ActivityManager.RECENT_WITH_EXCLUDED);
 		
 		this.apps.clear();
@@ -180,11 +180,12 @@ public class TouchService extends Service implements OnTouchListener {
 		}
 
 		WindowManager.LayoutParams mParams = new WindowManager.LayoutParams(
-				(int) iconSize, (int) (n*iconSize), WindowManager.LayoutParams.TYPE_PHONE,
+				(int) (iconSize), (int) (n*iconSize), WindowManager.LayoutParams.TYPE_PHONE,
 				WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
 				PixelFormat.TRANSLUCENT);
-		mParams.gravity = Gravity.RIGHT | Gravity.CENTER;
-		mParams.y = (int) (startY - n*iconSize);
+		mParams.gravity = Gravity.RIGHT | Gravity.TOP;
+		int destY = (int) (startY - (n*iconSize));
+		mParams.y = (destY < 0) ? 0 : destY;
 		Log.d(TAG, "mParams.y = "+mParams.y+", iconSize="+iconSize+", n="+n+" startY="+startY);
 
 		mWindowManager.addView(appsIcons, mParams);
@@ -216,8 +217,8 @@ public class TouchService extends Service implements OnTouchListener {
 	@Override
 	public boolean onTouch(View v, MotionEvent event) {
 		if (event.getAction() == MotionEvent.ACTION_MOVE) {
-			float x = event.getRawX()*scale;
-			float y = event.getRawY()*scale;
+			float x = event.getRawX();//*scale;
+			float y = event.getRawY();//*scale;
 			double distance = Math.sqrt(Math.pow(Math.abs(x - startX), 2)
 					+ Math.pow(Math.abs(y - startY), 2));
 
@@ -227,16 +228,14 @@ public class TouchService extends Service implements OnTouchListener {
 			} else if(appSelected && distance < 200) {
 				cleanInterface();
 			} else if (appSelected) {
-				if(Math.abs(y-lastY) > iconSize) {
-					lastY = y;
-					selectedIndex = (int)Math.floor(Math.abs(startY - y)/iconSize);
-					updateIcons(selectedIndex);
-				}
+				lastY = y;
+				selectedIndex = (int)Math.floor(Math.abs(startY - y)/iconSize);
+				updateIcons(selectedIndex);
 			}
 		}
 		if (event.getAction() == MotionEvent.ACTION_DOWN) {
-			startX = event.getRawX()*scale;
-			startY = event.getRawY()*scale;
+			startX = event.getRawX();//*scale;
+			startY = event.getRawY();//*scale;
 
 			lastX = startX;
 			lastY = startY;
