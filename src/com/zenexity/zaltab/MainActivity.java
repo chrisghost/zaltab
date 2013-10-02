@@ -45,7 +45,7 @@ public class MainActivity extends Activity {
 		 // Pour avoir les ident r.id = RecentTask.id
 		 for(RunningTaskInfo r : list) {
 			 if(!"com.android.launcher".equals(r.baseActivity.getPackageName()) 
-			    && !"com.android.systemui".equals(r.baseActivity.getPackageName()) {
+			    && !"com.android.systemui".equals(r.baseActivity.getPackageName()) ){
 				 listFiltered.add(r);
 			 }
 		 }
