@@ -77,7 +77,7 @@ public class TouchService extends Service implements OnTouchListener {
 	}
 
 	private void launchLastApp() {
-		if (lastTaskInfo.get(0) != null)
+		if (lastTaskInfo.size() > 0 && lastTaskInfo.get(0) != null)
 			startActivity(lastTaskInfo.get(0).baseIntent);
 	}
 
@@ -94,22 +94,24 @@ public class TouchService extends Service implements OnTouchListener {
 			}
 		}
 
-		List<RecentTaskInfo> rtis = manager.getRecentTasks(5,
+		List<RecentTaskInfo> rtis = manager.getRecentTasks(10,
 				ActivityManager.RECENT_WITH_EXCLUDED);
 		
 		this.lastAppInfo.clear();
 		this.lastTaskInfo.clear();
 
 
-		if (listFiltered.size() > 1) {
-			RecentTaskInfo rti = null;
-			for (int i = 0; i < rtis.size(); i++) {
-				if (rtis.get(i).id == listFiltered.get(1).id) {
-					rti = rtis.get(i);
+		for (int i = 0; i < listFiltered.size(); i++) {
+			//We must permute the first 2 entries ( the first is the current app)
+			RunningTaskInfo _task = (i == 0) ? listFiltered.get(1) : (i ==1) ? listFiltered.get(0) : listFiltered.get(i);
+			boolean found = false;
+			for (int j = 0; j < rtis.size() && !found; j++) {
+				if (rtis.get(j).id == _task.id) {
+					found = true;
+					RecentTaskInfo rti = rtis.get(j);
 
 					try {
-						this.lastAppInfo.add(pm.getApplicationInfo(listFiltered
-								.get(1).baseActivity.getPackageName(), 0));
+						this.lastAppInfo.add(pm.getApplicationInfo(_task.baseActivity.getPackageName(), 0));
 						this.lastTaskInfo.add(rti);
 						// String packageName = appInfo.packageName;
 						// String appLabel = (String)
@@ -126,21 +128,30 @@ public class TouchService extends Service implements OnTouchListener {
 	private void createAppBox() {
 		getLastAppInfo();
 		
-		ImageView imgV = new ImageView(this);
+		LinearLayout ll = new LinearLayout(this);
+		ll.setOrientation(LinearLayout.VERTICAL);
 
-		try {
-			imgV.setImageDrawable(pm.getApplicationIcon(lastAppInfo.get(0)));
-		} catch (NullPointerException npe) {
-			imgV.setImageResource(R.drawable.no_icon_app);
+		for(int i = lastAppInfo.size()-1; i >= 0; i--) {
+			ApplicationInfo appInfo = lastAppInfo.get(i);
+			ImageView imgV = new ImageView(this);
+			try {
+				imgV.setImageDrawable(pm.getApplicationIcon(appInfo));
+			} catch (NullPointerException npe) {
+				imgV.setImageResource(R.drawable.no_icon_app);
+			}
+	
+			ll.addView(imgV);
 		}
+
 		WindowManager.LayoutParams mParams = new WindowManager.LayoutParams(
-				100, 100, WindowManager.LayoutParams.TYPE_PHONE,
+				100, 300, WindowManager.LayoutParams.TYPE_PHONE,
 				WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
 				PixelFormat.TRANSLUCENT);
 		mParams.gravity = Gravity.RIGHT | Gravity.CENTER;
 
-		mWindowManager.addView(imgV, mParams);
-		appBoxes.add(imgV);
+		mWindowManager.addView(ll, mParams);
+
+		appBoxes.add(ll);
 	}
 
 	public void cleanBoxes() {
