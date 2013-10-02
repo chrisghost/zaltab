@@ -16,6 +16,7 @@ import android.graphics.ColorFilter;
 import android.graphics.LightingColorFilter;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -40,12 +41,19 @@ public class TouchService extends Service implements OnTouchListener {
 	private float startX;
 	private float startY;
 
+	private float lastX;
+	private float lastY;
+
 	private boolean appSelected;
 
 	private PackageManager pm;
 
 	private List<ApplicationInfo> lastAppInfo = new ArrayList<ApplicationInfo>();
 	private List<RecentTaskInfo> lastTaskInfo = new ArrayList<RecentTaskInfo>();
+
+	List<ImageView> ivLst = new ArrayList<ImageView>();
+	
+	private static final int iconSize = 100;
 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -128,11 +136,25 @@ public class TouchService extends Service implements OnTouchListener {
 		}
 	}
 
+	private void updateIcons(int idx) {
+		for(int i = 0; i< ivLst.size(); i++) {
+			if(i == idx) {
+				ivLst.get(i).setColorFilter(null);
+			} else {
+				ColorFilter filter = new LightingColorFilter(Color.GRAY, 1);
+				ivLst.get(i).setColorFilter(filter);
+			}
+		}
+	}
+	
 	private void createAppBox() {
 		getLastAppInfo();
 		
 		LinearLayout ll = new LinearLayout(this);
 		ll.setOrientation(LinearLayout.VERTICAL);
+		ivLst.clear();
+
+		int n = 0;
 
 		for(int i = lastAppInfo.size()-1; i >= 0; i--) {
 			ApplicationInfo appInfo = lastAppInfo.get(i);
@@ -149,13 +171,16 @@ public class TouchService extends Service implements OnTouchListener {
 			}
 	
 			ll.addView(imgV);
+			ivLst.add(0, imgV);
+			n++;
 		}
 
 		WindowManager.LayoutParams mParams = new WindowManager.LayoutParams(
-				100, 300, WindowManager.LayoutParams.TYPE_PHONE,
+				iconSize, n*iconSize, WindowManager.LayoutParams.TYPE_PHONE,
 				WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
 				PixelFormat.TRANSLUCENT);
 		mParams.gravity = Gravity.RIGHT | Gravity.CENTER;
+		mParams.y = (int) (startY - 2*n*iconSize);
 
 		mWindowManager.addView(ll, mParams);
 
@@ -194,11 +219,20 @@ public class TouchService extends Service implements OnTouchListener {
 				appSelected = true;
 			} else if(appSelected && distance < 200) {
 				cleanInterface();
+			} else if (appSelected) {
+				if(Math.abs(y-lastY) > iconSize) {
+					lastY = y;
+					int selectedIndex = (int)Math.floor(Math.abs(startY - y)/iconSize);
+					updateIcons(selectedIndex);
+				}
 			}
 		}
 		if (event.getAction() == MotionEvent.ACTION_DOWN) {
 			startX = event.getRawX();
 			startY = event.getRawY();
+
+			lastX = startX;
+			lastY = startY;
 		}
 		if (event.getAction() == MotionEvent.ACTION_UP) {
 			if (appSelected) {
