@@ -38,36 +38,6 @@ public class MainActivity extends Activity {
 		 ActivityManager manager = 
 			    (ActivityManager) this.getSystemService(ACTIVITY_SERVICE);
 
-		 PackageManager pm = getPackageManager();
-
-		 List<RunningTaskInfo> list = manager.getRunningTasks(10);
-		 List<RunningTaskInfo> listFiltered = new ArrayList<ActivityManager.RunningTaskInfo>();
-		 // Pour avoir les ident r.id = RecentTask.id
-		 for(RunningTaskInfo r : list) {
-			 if(!"com.android.launcher".equals(r.baseActivity.getPackageName()) 
-			    && !"com.android.systemui".equals(r.baseActivity.getPackageName()) ){
-				 listFiltered.add(r);
-			 }
-		 }
-		 
-	    for (int i=0; i< listFiltered.size(); i++)
-	    {
-	        ApplicationInfo appInfo;
-			try {
-				appInfo = pm.getApplicationInfo(list.get(i).baseActivity.getPackageName(), 0);
-		        String packageName = appInfo.packageName;
-		        String appLabel = (String) pm.getApplicationLabel(appInfo);
-		        Drawable icon = pm.getApplicationIcon(appInfo);
-		        System.out.println("appLabel ==> " +appLabel);
-		        System.out.println("packageName ==> " +packageName);
-		        System.out.println("Icon ==> " +icon);
-		        imgV1.setImageDrawable(icon);
-			} catch (NameNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-	    }
-	  
 	  if(v.getTag() == null){
 	   startService(globalService);
 	   v.setTag("on");

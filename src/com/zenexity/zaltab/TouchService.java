@@ -9,8 +9,12 @@ import android.app.Service;
 import android.app.ActivityManager.RecentTaskInfo;
 import android.app.ActivityManager.RunningTaskInfo;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
+import android.graphics.drawable.Drawable;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.Gravity;
@@ -18,6 +22,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 
@@ -29,7 +34,7 @@ public class TouchService extends Service implements OnTouchListener {
 	// linear layout will use to detect touch event
 	private LinearLayout touchLayout;
 	
-	private List<LinearLayout> appBoxes = new ArrayList<LinearLayout>();
+	private List<View> appBoxes = new ArrayList<View>();
 	
 	ActivityManager manager;
 	
@@ -37,6 +42,9 @@ public class TouchService extends Service implements OnTouchListener {
 	private float startY;
 	
 	private boolean appSelected;
+
+	private PackageManager pm;
+
 	 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -48,6 +56,7 @@ public class TouchService extends Service implements OnTouchListener {
 	  super.onCreate();
 	  
 	  manager = (ActivityManager) this.getSystemService(ACTIVITY_SERVICE);
+	  pm = getPackageManager();
 	  
 	  // create linear layout
 	  touchLayout = new LinearLayout(this);
@@ -74,24 +83,63 @@ public class TouchService extends Service implements OnTouchListener {
 	 }
 	 
 	 private void launchLastApp() {
+
+	 }
+	 private ApplicationInfo getLastAppInfo() {
+		 List<RunningTaskInfo> list = manager.getRunningTasks(10);
+		 List<RunningTaskInfo> listFiltered = new ArrayList<ActivityManager.RunningTaskInfo>();
+		 // Pour avoir les ident r.id = RecentTask.id
+		 for(RunningTaskInfo r : list) {
+			 if(!"com.android.launcher".equals(r.baseActivity.getPackageName()) 
+			    && !"com.android.systemui".equals(r.baseActivity.getPackageName()) ){
+				 listFiltered.add(r);
+			 }
+		 }
+
 		List<RecentTaskInfo> rtis = manager.getRecentTasks(5,ActivityManager.RECENT_WITH_EXCLUDED);
 		Log.d(TAG, "apps:"+rtis.size());
-		
-		if(rtis.size() > 1) {
-			RecentTaskInfo rti = rtis.get(1);
-			Log.d(TAG, rti.toString());
-			startActivity(rti.baseIntent);
+
+		if (listFiltered.size() > 1) {
+			RecentTaskInfo rti = null;
+			for (int i = 0; i < rtis.size(); i++) {
+				if (rtis.get(i).id == listFiltered.get(1).id) {
+					rti = rtis.get(i);
+
+					ApplicationInfo appInfo;
+					try {
+						appInfo = pm.getApplicationInfo(listFiltered.get(1).baseActivity.getPackageName(), 0);
+						return appInfo;
+						//String packageName = appInfo.packageName;
+						//String appLabel = (String) pm.getApplicationLabel(appInfo);
+						//Drawable icon = pm.getApplicationIcon(appInfo);
+					} catch (NameNotFoundException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+			//if(rti != null)
+				//startActivity(rti.baseIntent);
 		}
+		return null;
 	 }
 	 
 	 private void createAppBox() {
+		 
+		ApplicationInfo appInfo = getLastAppInfo();
+		ImageView imgV = new ImageView(this);
+		
+		imgV.setImageDrawable(pm.getApplicationIcon(appInfo));
+		
+		
+		/*
 		LinearLayout ll = new LinearLayout(this);
 
 		LayoutParams lp = new LayoutParams(100, 100);
 		ll.setLayoutParams(lp);
 		ll.setBackgroundColor(Color.RED);
+		*/
 
-		// set layout parameter of window manager
 		WindowManager.LayoutParams mParams =
 				new WindowManager.LayoutParams(
 						100, 100,
@@ -100,8 +148,8 @@ public class TouchService extends Service implements OnTouchListener {
 						PixelFormat.TRANSLUCENT);
 		mParams.gravity = Gravity.RIGHT | Gravity.CENTER;
 
-		mWindowManager.addView(ll, mParams);
-		appBoxes.add(ll);
+		mWindowManager.addView(imgV, mParams);
+		appBoxes.add(imgV);
 	 }
 
 	 public void cleanBoxes() {
@@ -132,7 +180,7 @@ public class TouchService extends Service implements OnTouchListener {
 						Math.pow(Math.abs(x-startX), 2)
 					+ 	Math.pow(Math.abs(y-startY), 2));
 
-			if(distance > 300) {
+			if(distance > 200) {
 				touchLayout.setBackgroundColor(Color.GREEN);
 				createAppBox();
 				appSelected = true;
