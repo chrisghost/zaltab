@@ -6,6 +6,13 @@
         android:summary="@string/pref_zaltab_recommendations"
         android:title="@string/pref_zaltab_enable"/>
 
+    <com.zenexity.zaltab.AboutDialog
+        android:key="key" android:title="About"
+        android:dialogTitle="Zaltab"
+        android:dialogIcon="@drawable/ic_launcher" android:negativeButtonText="@null"
+        android:positiveButtonText="ok"
+        />
+
     <!-- NOTE: EditTextPreference accepts EditText attributes. -->
     <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
 <!--     <EditTextPreference -->
