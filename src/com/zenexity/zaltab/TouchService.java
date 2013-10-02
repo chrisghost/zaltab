@@ -48,11 +48,14 @@ public class TouchService extends Service implements OnTouchListener {
 	
 	List<AppBox> apps = new ArrayList<AppBox>();
 	
-	private static final int iconSize = 100;
 	
 	private int selectedIndex = 0;
 	private LinearLayout appsIcons;
+	
+	private float scale;
 
+	private float iconSize = 0.0f;
+	
 	@Override
 	public IBinder onBind(Intent arg0) {
 		// TODO Auto-generated method stub
@@ -71,6 +74,10 @@ public class TouchService extends Service implements OnTouchListener {
 		touchLayout.setLayoutParams(lp);
 
 		touchLayout.setOnTouchListener(this);
+		
+		scale = getResources().getDisplayMetrics().density;
+		Log.d(TAG, "scale is : "+scale);
+		iconSize = 100*scale;
 
 		mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
@@ -173,11 +180,12 @@ public class TouchService extends Service implements OnTouchListener {
 		}
 
 		WindowManager.LayoutParams mParams = new WindowManager.LayoutParams(
-				iconSize, n*iconSize, WindowManager.LayoutParams.TYPE_PHONE,
+				(int) iconSize, (int) (n*iconSize), WindowManager.LayoutParams.TYPE_PHONE,
 				WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
 				PixelFormat.TRANSLUCENT);
 		mParams.gravity = Gravity.RIGHT | Gravity.CENTER;
-		mParams.y = (int) (startY - 2*n*iconSize);
+		mParams.y = (int) (startY - n*iconSize);
+		Log.d(TAG, "mParams.y = "+mParams.y+", iconSize="+iconSize+", n="+n+" startY="+startY);
 
 		mWindowManager.addView(appsIcons, mParams);
 	}
@@ -208,8 +216,8 @@ public class TouchService extends Service implements OnTouchListener {
 	@Override
 	public boolean onTouch(View v, MotionEvent event) {
 		if (event.getAction() == MotionEvent.ACTION_MOVE) {
-			float x = event.getRawX();
-			float y = event.getRawY();
+			float x = event.getRawX()*scale;
+			float y = event.getRawY()*scale;
 			double distance = Math.sqrt(Math.pow(Math.abs(x - startX), 2)
 					+ Math.pow(Math.abs(y - startY), 2));
 
@@ -227,8 +235,8 @@ public class TouchService extends Service implements OnTouchListener {
 			}
 		}
 		if (event.getAction() == MotionEvent.ACTION_DOWN) {
-			startX = event.getRawX();
-			startY = event.getRawY();
+			startX = event.getRawX()*scale;
+			startY = event.getRawY()*scale;
 
 			lastX = startX;
 			lastY = startY;
