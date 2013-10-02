@@ -77,8 +77,8 @@ public class TouchService extends Service implements OnTouchListener {
 	}
 
 	private void launchLastApp() {
-		if (lastTaskInfo != null)
-			startActivity(lastTaskInfo.baseIntent);
+		if (lastTaskInfo.get(0) != null)
+			startActivity(lastTaskInfo.get(0).baseIntent);
 	}
 
 	private void getLastAppInfo() {
@@ -96,6 +96,9 @@ public class TouchService extends Service implements OnTouchListener {
 
 		List<RecentTaskInfo> rtis = manager.getRecentTasks(5,
 				ActivityManager.RECENT_WITH_EXCLUDED);
+		
+		this.lastAppInfo.clear();
+		this.lastTaskInfo.clear();
 
 
 		if (listFiltered.size() > 1) {
@@ -105,9 +108,9 @@ public class TouchService extends Service implements OnTouchListener {
 					rti = rtis.get(i);
 
 					try {
-						this.lastAppInfo = pm.getApplicationInfo(listFiltered
-								.get(1).baseActivity.getPackageName(), 0);
-						this.lastTaskInfo = rti;
+						this.lastAppInfo.add(pm.getApplicationInfo(listFiltered
+								.get(1).baseActivity.getPackageName(), 0));
+						this.lastTaskInfo.add(rti);
 						// String packageName = appInfo.packageName;
 						// String appLabel = (String)
 						// pm.getApplicationLabel(appInfo);
@@ -122,10 +125,11 @@ public class TouchService extends Service implements OnTouchListener {
 
 	private void createAppBox() {
 		getLastAppInfo();
+		
 		ImageView imgV = new ImageView(this);
 
 		try {
-			imgV.setImageDrawable(pm.getApplicationIcon(lastAppInfo));
+			imgV.setImageDrawable(pm.getApplicationIcon(lastAppInfo.get(0)));
 		} catch (NullPointerException npe) {
 			imgV.setImageResource(R.drawable.no_icon_app);
 		}
