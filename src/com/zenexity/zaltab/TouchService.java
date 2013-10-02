@@ -2,6 +2,7 @@ package com.zenexity.zaltab;
 
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
 import android.util.Log;
@@ -20,6 +21,9 @@ public class TouchService extends Service implements OnTouchListener {
 	private WindowManager mWindowManager;
 	// linear layout will use to detect touch event
 	private LinearLayout touchLayout;
+	
+	private float startX;
+	private float startY;
 	 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -35,7 +39,7 @@ public class TouchService extends Service implements OnTouchListener {
 	  LayoutParams lp = new LayoutParams(30, LayoutParams.MATCH_PARENT);
 	  touchLayout.setLayoutParams(lp);
 	  // set color if you want layout visible on screen
-	//  touchLayout.setBackgroundColor(Color.CYAN); 
+	  touchLayout.setBackgroundColor(Color.CYAN); 
 	  // set on touch listener
 	  touchLayout.setOnTouchListener(this);
 
@@ -48,11 +52,9 @@ public class TouchService extends Service implements OnTouchListener {
 	                 WindowManager.LayoutParams.TYPE_PHONE, // Type Phone, These are non-application windows providing user interaction with the phone (in particular incoming calls).
 	                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, // this window won't ever get key input focus  
 	                 PixelFormat.TRANSLUCENT);      
-	         mParams.gravity = Gravity.LEFT | Gravity.TOP;   
-	   Log.i(TAG, "add View");
-
-	      mWindowManager.addView(touchLayout, mParams);
-	  
+		mParams.gravity = Gravity.RIGHT | Gravity.TOP;
+		
+		mWindowManager.addView(touchLayout, mParams);
 	 }
 	 
 
@@ -66,9 +68,24 @@ public class TouchService extends Service implements OnTouchListener {
 
 	 @Override
 	 public boolean onTouch(View v, MotionEvent event) {
-	  if(event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_UP)
-	   Log.i(TAG, "Action :" + event.getAction() + "\t X :" + event.getRawX() + "\t Y :"+ event.getRawY());
-	  
+		 if(event.getAction() == MotionEvent.ACTION_MOVE) {
+			float x = event.getRawX();
+			float y = event.getRawY();
+			double distance = Math.sqrt(
+						Math.pow(Math.abs(x-startX), 2)
+					+ 	Math.pow(Math.abs(y-startY), 2));
+
+			Log.i(TAG, "Moving.... distance is now:"+distance);
+			if(distance > 300)
+				touchLayout.setBackgroundColor(Color.RED); 
+		 }
+		 if(event.getAction() == MotionEvent.ACTION_DOWN) {
+			startX = event.getRawX();
+			startY = event.getRawY();
+		 }
+		 if(event.getAction() == MotionEvent.ACTION_UP) {
+			 touchLayout.setBackgroundColor(Color.CYAN);
+		 }
 	  return true;
 	 }
 
