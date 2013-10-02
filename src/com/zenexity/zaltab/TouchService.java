@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
 import android.view.Gravity;
@@ -61,7 +60,6 @@ public class TouchService extends Service implements OnTouchListener {
 		touchLayout = new LinearLayout(this);
 		LayoutParams lp = new LayoutParams(30, LayoutParams.MATCH_PARENT);
 		touchLayout.setLayoutParams(lp);
-		touchLayout.setBackgroundColor(Color.CYAN);
 
 		touchLayout.setOnTouchListener(this);
 
@@ -83,14 +81,15 @@ public class TouchService extends Service implements OnTouchListener {
 			startActivity(lastTaskInfo.baseIntent);
 	}
 
-	private List<Object> getLastAppInfo() {
+	private void getLastAppInfo() {
 		List<RunningTaskInfo> list = manager.getRunningTasks(10);
 		List<RunningTaskInfo> listFiltered = new ArrayList<ActivityManager.RunningTaskInfo>();
 		// Pour avoir les ident r.id = RecentTask.id
 		for (RunningTaskInfo r : list) {
 			if (!"com.android.launcher".equals(r.baseActivity.getPackageName())
-					&& !"com.android.systemui".equals(r.baseActivity
-							.getPackageName())) {
+					&& !"com.android.systemui".equals(r.baseActivity.getPackageName())
+					&& !"com.zenexity.zaltab".equals(r.baseActivity.getPackageName())
+					) {
 				listFiltered.add(r);
 			}
 		}
@@ -98,7 +97,6 @@ public class TouchService extends Service implements OnTouchListener {
 		List<RecentTaskInfo> rtis = manager.getRecentTasks(5,
 				ActivityManager.RECENT_WITH_EXCLUDED);
 
-		List<Object> res = new ArrayList<Object>();
 
 		if (listFiltered.size() > 1) {
 			RecentTaskInfo rti = null;
@@ -120,15 +118,17 @@ public class TouchService extends Service implements OnTouchListener {
 				}
 			}
 		}
-		return res;
 	}
 
 	private void createAppBox() {
 		getLastAppInfo();
 		ImageView imgV = new ImageView(this);
 
-		imgV.setImageDrawable(pm.getApplicationIcon(lastAppInfo));
-
+		try {
+			imgV.setImageDrawable(pm.getApplicationIcon(lastAppInfo));
+		} catch (NullPointerException npe) {
+			imgV.setImageResource(R.drawable.no_icon_app);
+		}
 		WindowManager.LayoutParams mParams = new WindowManager.LayoutParams(
 				100, 100, WindowManager.LayoutParams.TYPE_PHONE,
 				WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
@@ -166,11 +166,10 @@ public class TouchService extends Service implements OnTouchListener {
 			double distance = Math.sqrt(Math.pow(Math.abs(x - startX), 2)
 					+ Math.pow(Math.abs(y - startY), 2));
 
-			if (distance > 200) {
-				touchLayout.setBackgroundColor(Color.GREEN);
+			if (!appSelected && distance > 200) {
 				createAppBox();
 				appSelected = true;
-			} else {
+			} else if(appSelected && distance < 200) {
 				cleanInterface();
 			}
 		}
@@ -188,7 +187,6 @@ public class TouchService extends Service implements OnTouchListener {
 	}
 
 	private void cleanInterface() {
-		touchLayout.setBackgroundColor(Color.CYAN);
 		cleanBoxes();
 		appSelected = false;
 	}
