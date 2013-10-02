@@ -1,5 +1,8 @@
 package com.zenexity.zaltab;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.Color;
@@ -21,6 +24,8 @@ public class TouchService extends Service implements OnTouchListener {
 	private WindowManager mWindowManager;
 	// linear layout will use to detect touch event
 	private LinearLayout touchLayout;
+	
+	private List<LinearLayout> appBoxes = new ArrayList<LinearLayout>();
 	
 	private float startX;
 	private float startY;
@@ -57,13 +62,43 @@ public class TouchService extends Service implements OnTouchListener {
 		mWindowManager.addView(touchLayout, mParams);
 	 }
 	 
+	 private void createAppBox() {
+		LinearLayout ll = new LinearLayout(this);
+		appBoxes.add(ll);
 
+		LayoutParams lp = new LayoutParams(100, 100);
+		ll.setLayoutParams(lp);
+		ll.setBackgroundColor(Color.RED);
+
+		// fetch window manager object
+		mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+		// set layout parameter of window manager
+		WindowManager.LayoutParams mParams =
+				new WindowManager.LayoutParams(100, 100,
+				WindowManager.LayoutParams.TYPE_PHONE,
+				WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+				PixelFormat.TRANSLUCENT);
+		mParams.gravity = Gravity.RIGHT | Gravity.CENTER;
+
+		mWindowManager.addView(ll, mParams);
+	 }
+
+	 public void cleanBoxes() {
+		 if(mWindowManager != null) {
+			 for(int i=0; i< appBoxes.size(); i++) {
+				 mWindowManager.removeView(appBoxes.get(i));
+			 }
+		 }
+	 }
+	 
 	 @Override
 	 public void onDestroy() {
 	   if(mWindowManager != null) {
-	             if(touchLayout != null) mWindowManager.removeView(touchLayout);
-	         }
-	  super.onDestroy();
+		   if(touchLayout != null)
+			   mWindowManager.removeView(touchLayout);
+	   }
+	   cleanBoxes();
+	   super.onDestroy();
 	 }
 
 	 @Override
@@ -76,8 +111,10 @@ public class TouchService extends Service implements OnTouchListener {
 					+ 	Math.pow(Math.abs(y-startY), 2));
 
 			Log.i(TAG, "Moving.... distance is now:"+distance);
-			if(distance > 300)
-				touchLayout.setBackgroundColor(Color.RED); 
+			if(distance > 300) {
+				touchLayout.setBackgroundColor(Color.GREEN);
+				createAppBox();
+			}
 		 }
 		 if(event.getAction() == MotionEvent.ACTION_DOWN) {
 			startX = event.getRawX();
@@ -85,6 +122,7 @@ public class TouchService extends Service implements OnTouchListener {
 		 }
 		 if(event.getAction() == MotionEvent.ACTION_UP) {
 			 touchLayout.setBackgroundColor(Color.CYAN);
+			 cleanBoxes();
 		 }
 	  return true;
 	 }
